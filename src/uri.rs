@@ -84,6 +84,17 @@ impl Display for RequestUri {
     }
 }
 
+impl AsRef<str> for RequestUri {
+    fn as_ref(&self) -> &str {
+        match *self {
+            RequestUri::AbsolutePath(ref path) => path.as_ref(),
+            RequestUri::AbsoluteUri(ref url) =>  url.serialize().as_ref(),
+            RequestUri::Authority(ref path) => path.as_ref(),
+            RequestUri::Star => "*"
+        }
+    }
+}
+
 #[test]
 fn test_uri_fromstr() {
     fn read(s: &str, result: RequestUri) {
@@ -106,5 +117,18 @@ fn test_uri_display() {
     assert_display("http://hyper.rs/", RequestUri::AbsoluteUri(Url::parse("http://hyper.rs/").unwrap()));
     assert_display("hyper.rs", RequestUri::Authority("hyper.rs".to_owned()));
     assert_display("/", RequestUri::AbsolutePath("/".to_owned()));
+
+}
+
+#[test]
+fn test_uri_asref_str() {
+    fn assert_asref_str(expected_string: &str, request_uri: RequestUri) {
+        assert_eq!(expected_string, request_uri.as_ref::<str>());
+    }
+
+    assert_asref_str("*", RequestUri::Star);
+    assert_asref_str("http://hyper.rs/", RequestUri::AbsoluteUri(Url::parse("http://hyper.rs/").unwrap()));
+    assert_asref_str("hyper.rs", RequestUri::Authority("hyper.rs".to_owned()));
+    assert_asref_str("/", RequestUri::AbsolutePath("/".to_owned()));
 
 }
